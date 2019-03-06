@@ -199,6 +199,9 @@ namespace TikiSpawnAsAdmin
         [DllImport("advapi32.dll")]
         public static extern bool ImpersonateLoggedOnUser(IntPtr hToken);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool TerminateProcess(IntPtr hProcess, uint uExitCode);
+
         [DllImport("kernel32.dll")]
         static extern uint GetLastError();
 
@@ -346,6 +349,9 @@ namespace TikiSpawnAsAdmin
             PROCESS_INFORMATION procInfo = new PROCESS_INFORMATION();
             if (!CreateProcessWithLogonW("x", "x", "x", 0x00000002, path, "", 0x04000000, 0, Directory.GetCurrentDirectory(), ref startInfo, out procInfo))
                 throw new SystemException("[x] Failed to create process with logon");
+
+            if (!TerminateProcess(hProcess, 1))
+                Console.WriteLine("Warning, failed to terminate wusa.exe");
 
             return procInfo;
         }

@@ -6,11 +6,20 @@ namespace TikiSpawnAs
     {
         static void Main(string[] args)
         {
-            string targetProcess = @"C:\\Windows\\System32\\notepad.exe";
             string encodedShellcode = @"";
 
+            if (args.Length != 3)
+            {
+                Console.WriteLine("Usage: TikiSpawnAs.exe DOMAIN\\User targetProcess");
+                Console.WriteLine("       TikiSpawnAs.exe LAB\\Rasta \"C:\\\\Program Files\\\\Internet Explorer\\\\iexplore.exe\"");
+
+                Environment.Exit(1);
+            }
+
+            
             string username = args[0];
             string password = args[1];
+            string targetProcess = args[2];
 
             string[] split = username.Split('\\');
 

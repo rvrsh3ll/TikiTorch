@@ -4,10 +4,20 @@ namespace TikiSpawnAsAdmin
 {
     class Program
     {
-        static void Main()
+        static void Main(string[] args)
         {
-            string targetProcess = @"C:\\Windows\\System32\\notepad.exe";
+            
             string encodedShellcode = @"";
+
+            if (args.Length != 1)
+            {
+                Console.WriteLine("Usage: TikiSpawnAsAdmin.exe targetProcess");
+                Console.WriteLine("       TikiSpawnAsAdmin.exe \"C:\\\\Program Files\\\\Internet Explorer\\\\iexplore.exe\"");
+
+                Environment.Exit(1);
+            }
+
+            string targetProcess = args[0];
 
             var ldr = new Loader();
 
