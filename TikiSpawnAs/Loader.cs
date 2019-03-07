@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
 
 namespace TikiSpawnAs
@@ -215,8 +214,10 @@ namespace TikiSpawnAs
 
             uint flags = CreateSuspended | CreateNoWindow;
 
-            if (!CreateProcessWithLogonW(username, domain, password, (UInt32)1, path, "", flags, (UInt32)0, Directory.GetCurrentDirectory(), ref startInfo, out procInfo))
+            if (!CreateProcessWithLogonW(username, domain, password, 0x00000001, path, "", flags, (UInt32)0, "C:\\Windows\\System32", ref startInfo, out procInfo))
                 throw new SystemException("[x] Failed to create process!");
+            else
+                Console.WriteLine("Successfully created process {0}", procInfo.dwProcessId);
 
             return procInfo;
         }

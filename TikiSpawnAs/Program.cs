@@ -10,7 +10,7 @@ namespace TikiSpawnAs
 
             if (args.Length != 3)
             {
-                Console.WriteLine("Usage: TikiSpawnAs.exe DOMAIN\\User targetProcess");
+                Console.WriteLine("Usage: TikiSpawnAs.exe DOMAIN\\User Password targetProcess");
                 Console.WriteLine("       TikiSpawnAs.exe LAB\\Rasta \"C:\\\\Program Files\\\\Internet Explorer\\\\iexplore.exe\"");
 
                 Environment.Exit(1);

